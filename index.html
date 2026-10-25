@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tunisian National Parks: data tool</title>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<aside id="side">
+ <h1>Tunisian National Parks</h1>
+ <div class="mu">Pick a park to begin.</div>
+ 
+ <h2>1. Park</h2>
+ <select id="park"></select>
+ <div id="msg" class="mu"></div>
+ 
+ <div id="tool-content" style="margin-top: 15px;">
+  <h2>2. Import GPS Data</h2>
+  <label class="mu">GeoJSON (title, type, date, description, media) or GPX file (waypoints, e.g. from a Garmin). Several files allowed. The park is detected automatically from GPX coordinates.
+    <input type="file" id="imp" accept=".geojson,.json,.gpx" multiple>
+  </label>
+  <div id="impmsg" class="mu"></div>
+  
+  <h2>3. Add extra points</h2>
+  <button id="add" disabled>+ Add a point (then click the map)</button>
+  <button id="reset" disabled>Start over (clear all points)</button>
+  <div id="list" class="mu"></div>
+  
+  <h2>4. Export</h2>
+  <button id="expmap" class="main" disabled>Download interactive 3D map (HTML)</button>
+  <button id="expzip" class="main" disabled>Download website package (ZIP, web component)</button>
+  <button id="exp" disabled>Download points only (GeoJSON)</button>
+  <div class="mu">The HTML file is self-contained (map libraries load from a CDN). Open it directly, or embed it with <code>&lt;iframe src="your_park_map.html" width="100%" height="600"&gt;&lt;/iframe&gt;</code>. Local media is referenced as <code>media/filename</code>: copy your files into a <code>media/</code> folder next to the exported page.</div>
+  
+  <h2>View</h2>
+  <label><input type="checkbox" id="t3d" checked style="width:auto"> 3D terrain</label>
+ </div>
+</aside>
+
+<div id="map"></div>
+
+<dialog id="dlg">
+ <b id="dt">New point</b>
+ <input id="f_title" placeholder="Title (e.g. Oryx herd near wadi)">
+ <select id="f_type"></select>
+ <input id="f_date" type="date">
+ <textarea id="f_desc" placeholder="Description / notes"></textarea>
+ <textarea id="f_media" placeholder="Media paths or links, one per line&#10;media/images/oryx.jpg&#10;media/audio/dawn.wav&#10;https://youtu.be/xxxxxxxxxxx"></textarea>
+ <label class="mu">Attach media files: only file names are recorded as <code>media/filename</code>.
+   <input type="file" id="f_files" multiple>
+ </label>
+ <div class="mu">Images, audio, video, PDF and YouTube links are shown in the popup.</div>
+ <div class="row"><button id="f_ok">Save</button><button id="f_del" hidden>Delete</button><button id="f_no">Cancel</button></div>
+</dialog>
+
+<!-- Libraries and main script link -->
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
