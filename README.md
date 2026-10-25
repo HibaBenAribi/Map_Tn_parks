@@ -1,9 +1,16 @@
 # Map_Tn_parks
 
-Site link : https://maptnparks.vercel.app/ 
+
 
 #  ​📌 About the Project
 ​Map_Tn_parks is an open-source initiative designed to map Tunisia’s national parks. It allows users to explore park boundaries while creating a unified space for community members to contribute their own field observations, images, and documentation.​
+
+# ​🚀 Usage
+​The project will soon be hosted online:
+Site link : https://maptnparks.vercel.app/ 
+
+But the current live version is not yet fully functional—for the best experience, please clone the repository and run the application locally from the source code.
+
 
 #  🤝 Contributing
 
