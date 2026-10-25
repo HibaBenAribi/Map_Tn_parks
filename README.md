@@ -2,7 +2,7 @@
 
 #ui
 
-<img width="1673" height="949" alt="image" src="https://github.com/user-attachments/assets/14bce7d2-ea66-44cf-90b1-51c5607b28c9" />
+<img width="1676" height="951" alt="image" src="https://github.com/user-attachments/assets/c7525625-8e88-477b-8247-1a7af053a798" />
 
 #select park
 
