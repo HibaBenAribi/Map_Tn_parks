@@ -2,23 +2,17 @@
 
 
 
-#  ​📌 About the Project
-​Map_Tn_parks is an open-source initiative designed to map Tunisia’s national parks. 
+#  ​About
 
 The website allows you to generate interactive maps for any national park, integrating all your field data—including GPS points, camera trap videos, standard photos, bioacoustic audio recordings, and reference documents—directly onto the map, which you can easily download or embed into any existing website.
 
-# ​🚀 Usage
+# ​Usage
 ​The project will soon be hosted online:
 Site link : https://maptnparks.vercel.app/ 
 
-But the current live version is not yet fully functional ( media  may not be displayed ), for the best experience, please clone the repository and run the application locally from the source code.
+But the current live version is not yet fully functional ( media  may not be displayed ), Clone the repository and run the application locally from the source code.
 
 
-#  🤝 Contributing
-
-​This project is 100% open source. Contributions are open to everyone, whether you want to code, improve features, or submit field observations and data.
-
-​To join, simply open a Pull Request (PR) with your updates/data.
 
 # Demonstration 
 
