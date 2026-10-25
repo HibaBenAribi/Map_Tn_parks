@@ -3,11 +3,11 @@
 Site link : https://maptnparks.vercel.app/ 
 
 
-#ui
+# ui
 
 <img width="1676" height="951" alt="image" src="https://github.com/user-attachments/assets/c7525625-8e88-477b-8247-1a7af053a798" />
 
-#select park
+# select park
 
 <img width="1673" height="947" alt="image" src="https://github.com/user-attachments/assets/8cb5cc28-c420-47e7-b98f-bef724373d14" />
 
@@ -18,16 +18,14 @@ Site link : https://maptnparks.vercel.app/
 
 <img width="332" height="339" alt="image" src="https://github.com/user-attachments/assets/d160cab0-079e-4c5d-ae58-2be645190115" />
 
-# add observations
+# add observations + media
 
 <img width="1673" height="940" alt="image" src="https://github.com/user-attachments/assets/5a53a530-1ec6-4018-932c-d6c8bc5a7563" />
 
-## specify type of each observation
+## specify type of each observation 
 
 <img width="312" height="194" alt="image" src="https://github.com/user-attachments/assets/a490cf85-36ed-4b11-9271-1d30f4713bf0" />
 
-# add media
-<img width="1673" height="944" alt="image" src="https://github.com/user-attachments/assets/2f6d9436-2b7d-4986-9407-37bc84faa284" />
 
 <img width="1665" height="948" alt="image" src="https://github.com/user-attachments/assets/d349d6a1-eb6f-4f08-a005-45399454992b" />
 
