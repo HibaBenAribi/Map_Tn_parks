@@ -16,7 +16,7 @@ But the current live version is not yet fully functional ( media  may not be dis
 
 #  🤝 Contributing
 
-​This project is 100% open source. Contributions are open to everyone—whether you want to code, improve features, or submit field observations and data.
+​This project is 100% open source. Contributions are open to everyone, whether you want to code, improve features, or submit field observations and data.
 
 ​To join, simply open a Pull Request (PR) with your updates/data.
 
