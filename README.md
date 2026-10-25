@@ -15,6 +15,10 @@
 
 <img width="1673" height="940" alt="image" src="https://github.com/user-attachments/assets/5a53a530-1ec6-4018-932c-d6c8bc5a7563" />
 
+## specify type of each observation
+
+<img width="312" height="194" alt="image" src="https://github.com/user-attachments/assets/a490cf85-36ed-4b11-9271-1d30f4713bf0" />
+
 # add media
 <img width="1673" height="944" alt="image" src="https://github.com/user-attachments/assets/2f6d9436-2b7d-4986-9407-37bc84faa284" />
 
