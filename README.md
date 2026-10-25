@@ -11,6 +11,10 @@
 # import gps data (.gpx file )
 <img width="1672" height="943" alt="image" src="https://github.com/user-attachments/assets/eb83f966-b845-4b80-8bd5-a04706bef661" />
 
+## edit gps points data + add media
+
+<img width="332" height="339" alt="image" src="https://github.com/user-attachments/assets/d160cab0-079e-4c5d-ae58-2be645190115" />
+
 # add observations
 
 <img width="1673" height="940" alt="image" src="https://github.com/user-attachments/assets/5a53a530-1ec6-4018-932c-d6c8bc5a7563" />
