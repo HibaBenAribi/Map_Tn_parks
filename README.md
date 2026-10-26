@@ -3,7 +3,7 @@
 
 #  ​About
 
-The website allows you to generate interactive maps for any national park, integrating all your field data—including GPS points, camera trap videos, standard photos, bioacoustic audio recordings, and reference documents—directly onto the map, which you can easily download or embed into any existing website.
+The tool allows you to generate interactive maps for any tunisian national park, integrating all your field data—including GPS points, camera trap videos, standard photos, bioacoustic audio recordings, and reference documents—directly onto the map, which you can easily download or embed into any existing website.
 
 static site : https://maptnparks.vercel.app/ 
 # ​Usage
