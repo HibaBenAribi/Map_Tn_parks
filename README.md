@@ -27,11 +27,11 @@ But the current live version is not yet fully functional ( media  may not be dis
 
 ## edit gps points data + add media
 
-<img width="332" height="339" alt="image" src="https://github.com/user-attachments/assets/d160cab0-079e-4c5d-ae58-2be645190115" />
+<img width="408" height="383" alt="image" src="https://github.com/user-attachments/assets/9407e69e-0550-45c7-a875-cc7e8e2085a4" />
 
 # add observations + media
 
-<img width="1673" height="940" alt="image" src="https://github.com/user-attachments/assets/5a53a530-1ec6-4018-932c-d6c8bc5a7563" />
+<img width="1030" height="375" alt="image" src="https://github.com/user-attachments/assets/726f88c8-6528-42c6-8fc7-a355d16e44c0" />
 
 ## specify type of each observation 
 
