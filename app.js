@@ -255,6 +255,29 @@ if ($("reset")) {
 
 $("f_type").innerHTML = Object.keys(TYPES).map(t => "<option>" + t + "</option>").join("");
 
+let formMedia = [];
+
+function renderFormMedia() {
+  const box = $("f_medialist");
+  box.innerHTML = "";
+  if (!formMedia.length) { box.textContent = "No media attached to this point."; return; }
+  formMedia.forEach((m, i) => {
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex;align-items:center;justify-content:space-between;gap:8px;padding:3px 0";
+    const name = document.createElement("span");
+    name.style.cssText = "overflow:hidden;text-overflow:ellipsis;white-space:nowrap";
+    name.textContent = m.replace(/^media\//, "");
+    name.title = m;
+    const rm = document.createElement("button");
+    rm.type = "button";
+    rm.textContent = "Remove";
+    rm.style.cssText = "width:auto;flex:none;padding:2px 8px";
+    rm.onclick = () => { formMedia.splice(i, 1); renderFormMedia(); };
+    row.append(name, rm);
+    box.appendChild(row);
+  });
+}
+
 function openForm(p, at) {
   editId = p ? p.id : null;
   pending = at;
@@ -263,7 +286,8 @@ function openForm(p, at) {
   $("f_type").value = p ? p.type : "Animal observation";
   $("f_date").value = p ? p.date : new Date().toISOString().slice(0, 10);
   $("f_desc").value = p ? p.desc : "";
-  $("f_media").value = p ? (p.media || []).join("\n") : "";
+  formMedia = p ? (p.media || []).slice() : [];
+  renderFormMedia();
   $("f_del").hidden = !p;
   $("f_upmsg").textContent = "";
   $("dlg").showModal();
@@ -276,22 +300,21 @@ $("f_files").onchange = async e => {
   const files = [...e.target.files];
   e.target.value = "";
   if (!files.length) return;
-  const have = $("f_media").value.split("\n").map(s => s.trim()).filter(Boolean);
   const note = $("f_upmsg"), okBtn = $("f_ok");
   okBtn.disabled = true;
   const failed = [];
   for (const [i, file] of files.entries()) {
     note.textContent = "Uploading " + (i + 1) + "/" + files.length + ": " + file.name + " ...";
-    let name = file.name;
-    try { name = await uploadMedia(file); } catch (err) { failed.push(file.name); }
-    const p = "media/" + name;
-    if (!have.includes(p)) have.push(p);
+    try {
+      const p = "media/" + await uploadMedia(file);
+      if (!formMedia.includes(p)) formMedia.push(p);
+      renderFormMedia();
+    } catch (err) { failed.push(file.name); }
   }
-  $("f_media").value = have.join("\n");
   okBtn.disabled = false;
   note.textContent = failed.length
-    ? "Upload failed for: " + failed.join(", ") + ". Run python start.py, or copy these files into media/ manually."
-    : files.length + " file(s) saved in media/.";
+    ? "Upload failed for: " + failed.join(", ") + ". Run the app with python start.py."
+    : files.length + " file(s) uploaded to media/.";
 };
 
 $("f_ok").onclick = () => {
@@ -300,7 +323,7 @@ $("f_ok").onclick = () => {
     type: $("f_type").value,
     date: $("f_date").value,
     desc: $("f_desc").value.trim(),
-    media: $("f_media").value.split("\n").map(s => s.trim()).filter(Boolean)
+    media: formMedia.slice()
   };
   if (editId) {
     Object.assign(pts.find(x => x.id === editId), o);
@@ -576,18 +599,6 @@ $("expmap").onclick = async () => {
   }
 };
 
-/* ---- bulk media import: copies files into media/ so imported GeoJSON/GPX references resolve ---- */
-$("impmedia").onchange = async e => {
-  const files = [...e.target.files];
-  e.target.value = "";
-  if (!files.length) return;
-  let ok = 0; const bad = [], renamed = [];
-  for (const [i, f] of files.entries()) {
-    $("impmsg").textContent = "Uploading media " + (i + 1) + "/" + files.length + ": " + f.name;
-    try { const n = await uploadMedia(f); ok++; if (n !== f.name) renamed.push(f.name + " -> " + n); } catch (err) { bad.push(f.name); }
-  }
-  $("impmsg").textContent = ok + " media file(s) saved in media/." + (renamed.length ? " Renamed: " + renamed.join(", ") + "." : "") + (bad.length ? " Failed (is start.py running?): " + bad.join(", ") + "." : "");
-};
 
 /* ---- web component packaging ---- */
 function parkMapComponent() {
