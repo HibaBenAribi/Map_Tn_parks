@@ -47,6 +47,74 @@ function media(p) {
   return '<div><a href="' + u + '" target="_blank">' + u + '</a></div>';
 }
 
+/* ---- persistence: points -> saved_data/, media -> media/ (done by start.py) ---- */
+let loadToken = 0, loadedFor = null, saveTimer = null, dirty = null;
+
+function setSaveMsg(t, bad) {
+  const el = $("savemsg");
+  if (!el) return;
+  el.textContent = t;
+  el.style.color = bad ? "#ef5350" : "";
+}
+
+// Server copy first; falls back to the committed static file (works on static hosting too).
+async function loadSaved(park) {
+  const urls = ["api/load?park=" + encodeURIComponent(park), "saved_data/" + slug(park) + "_public_points.json"];
+  for (const u of urls) {
+    try {
+      const r = await fetch(u, { cache: "no-store" });
+      if (!r.ok) continue;
+      const d = await r.json();
+      if (Array.isArray(d)) return d;
+    } catch (e) { /* try next */ }
+  }
+  return [];
+}
+
+async function postSave(s) {
+  try {
+    const body = JSON.stringify(s);
+    const r = await fetch("api/save", { method: "POST", headers: { "Content-Type": "application/json" }, body: body, keepalive: body.length < 60000 });
+    if (!r.ok) throw new Error(r.status);
+    setSaveMsg("Saved " + s.points.length + " point(s) to saved_data/ at " + new Date().toLocaleTimeString());
+  } catch (e) {
+    setSaveMsg("Auto-save failed. Run the app with python start.py (static hosting cannot save). Use the export buttons to keep your work.", true);
+  }
+}
+
+function flush() {
+  clearTimeout(saveTimer);
+  saveTimer = null;
+  if (!dirty) return Promise.resolve();
+  const s = dirty;
+  dirty = null;
+  return postSave(s);
+}
+
+// Call after every change to the points; snapshots the current park and saves shortly after.
+function save() {
+  if (!cur || loadedFor !== cur) return;
+  dirty = { park: cur, points: JSON.parse(JSON.stringify(pts)) };
+  setSaveMsg("Saving...");
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(flush, 400);
+}
+window.addEventListener("pagehide", flush);
+
+const toB64 = f => new Promise((res, rej) => {
+  const r = new FileReader();
+  r.onload = () => res(String(r.result).split(",")[1] || "");
+  r.onerror = rej;
+  r.readAsDataURL(f);
+});
+
+async function uploadMedia(file) {
+  const r = await fetch("api/upload-media", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ filename: file.name, data: await toB64(file) }) });
+  if (!r.ok) throw new Error(r.status);
+  const j = await r.json();
+  return j.filename || file.name;
+}
+
 /* ---- parks ---- */
 async function init() {
   try {
@@ -104,28 +172,40 @@ function slug(name) {
   return String(name || cur || "").replace(/\W+/g, "_").toLowerCase();
 }
 
-function selectPark(n) {
+async function selectPark(n) {
+  flush();                       // save the park we are leaving
+  const tok = ++loadToken;
+  loadedFor = null;
   cur = n || null;
   $("park").value = n || "";
   const hasPark = !!cur;
   $("add").disabled = $("exp").disabled = $("expmap").disabled = $("expzip").disabled = !hasPark;
   if ($("reset")) $("reset").disabled = !hasPark;
   setAdd(false);
-  
+  map.getContainer().querySelectorAll(".maplibregl-popup").forEach(e => e.remove());
+  setSaveMsg("");
+
+  pts = [];
+  draw();
+
   if (!cur) {
     map.getSource("mask").setData({ type: "FeatureCollection", features: [] });
-    pts = [];
-    draw();
     map.flyTo({ center: [9.5, 34], zoom: 5.4, pitch: 0, bearing: 0 });
     return;
   }
-  
-  pts = [];
-  draw();
+
   const fs = parks.features.filter(f => nm(f) === cur);
   map.getSource("mask").setData(maskFor(fs));
   const b = bbox(fs);
   map.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding: 60, pitch: 60, duration: 1800 });
+
+  setSaveMsg("Loading saved points...");
+  const saved = await loadSaved(cur);
+  if (tok !== loadToken) return; // another park was selected meanwhile
+  pts = saved;
+  loadedFor = cur;
+  draw();
+  setSaveMsg(saved.length ? saved.length + " saved point(s) loaded." : "No saved points yet. Changes are saved automatically.");
 }
 
 $("park").onchange = e => selectPark(e.target.value);
@@ -167,6 +247,7 @@ if ($("reset")) {
     if (confirm("Are you sure you want to clear all points for this park?")) {
       pts = [];
       draw();
+      save();
       map.getContainer().querySelectorAll(".maplibregl-popup").forEach(e => e.remove());
     }
   };
@@ -184,22 +265,33 @@ function openForm(p, at) {
   $("f_desc").value = p ? p.desc : "";
   $("f_media").value = p ? (p.media || []).join("\n") : "";
   $("f_del").hidden = !p;
+  $("f_upmsg").textContent = "";
   $("dlg").showModal();
 }
 
 window.edit = id => { const p = pts.find(x => x.id === id); if (p) openForm(p, null); };
 $("f_no").onclick = () => $("dlg").close();
 
-$("f_files").onchange = e => {
+$("f_files").onchange = async e => {
   const files = [...e.target.files];
   e.target.value = "";
   if (!files.length) return;
   const have = $("f_media").value.split("\n").map(s => s.trim()).filter(Boolean);
-  files.forEach(file => {
-    const mediaPathStr = "media/" + file.name;
-    if (!have.includes(mediaPathStr)) have.push(mediaPathStr);
-  });
+  const note = $("f_upmsg"), okBtn = $("f_ok");
+  okBtn.disabled = true;
+  const failed = [];
+  for (const [i, file] of files.entries()) {
+    note.textContent = "Uploading " + (i + 1) + "/" + files.length + ": " + file.name + " ...";
+    let name = file.name;
+    try { name = await uploadMedia(file); } catch (err) { failed.push(file.name); }
+    const p = "media/" + name;
+    if (!have.includes(p)) have.push(p);
+  }
   $("f_media").value = have.join("\n");
+  okBtn.disabled = false;
+  note.textContent = failed.length
+    ? "Upload failed for: " + failed.join(", ") + ". Run python start.py, or copy these files into media/ manually."
+    : files.length + " file(s) saved in media/.";
 };
 
 $("f_ok").onclick = () => {
@@ -218,6 +310,7 @@ $("f_ok").onclick = () => {
   $("dlg").close();
   setAdd(false);
   draw();
+  save();
 };
 
 $("f_del").onclick = () => {
@@ -226,6 +319,7 @@ $("f_del").onclick = () => {
     $("dlg").close();
     map.getContainer().querySelectorAll(".maplibregl-popup").forEach(e => e.remove());
     draw();
+    save();
   }
 };
 
@@ -333,13 +427,13 @@ $("imp").onchange = async e => {
           const cnt = {};
           g.points.forEach(p => { const n = parkAt(p.lng, p.lat); if (n) cnt[n] = (cnt[n] || 0) + 1; });
           const best = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a])[0];
-          if (best) { selectPark(best); notes.push("park set to " + best + "."); }
+          if (best) { await selectPark(best); notes.push("park set to " + best + "."); }
         }
         if (!cur) { errs.push(f.name + ": select a park first"); continue; }
         np = g.points;
       } else {
         const o = JSON.parse(text);
-        if (!cur && o.park && parks && parks.features.some(x => nm(x) === o.park)) selectPark(o.park);
+        if (!cur && o.park && parks && parks.features.some(x => nm(x) === o.park)) await selectPark(o.park);
         if (!cur) { errs.push(f.name + ": select a park first"); continue; }
         np = toPoints(o, Date.now() + "_" + k);
         if (!np.length) { errs.push(f.name + ": no Point features found"); continue; }
@@ -350,6 +444,7 @@ $("imp").onchange = async e => {
   }
   if (added) {
     draw();
+    save();
     const b = bbox(pts.map(p => ({ geometry: { coordinates: [p.lng, p.lat] } })));
     if (pts.length) map.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding: 80, maxZoom: 14, pitch: 60, duration: 1200 });
   }
@@ -448,7 +543,51 @@ function buildEmbed() {
     '<' + S + ' src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></' + S + '>\n<' + S + '>\n' + js + '\n</' + S + '>\n</body></html>\n';
 }
 
-$("expmap").onclick = () => { if (!cur) return; download(slug() + "_map.html", buildEmbed(), "text/html"); };
+// Copies every local media file used by the points from media/ (saved by start.py) into the zip.
+async function addMedia(z, names) {
+  const missing = [];
+  for (const [i, n] of names.entries()) {
+    setSaveMsg("Packing media " + (i + 1) + "/" + names.length + ": " + n);
+    try {
+      const r = await fetch("media/" + encodeURIComponent(n), { cache: "no-store" });
+      if (!r.ok) throw new Error(r.status);
+      z.file("media/" + n, await r.blob());
+    } catch (e) { missing.push(n); }
+  }
+  setSaveMsg("");
+  return missing;
+}
+const warnMissing = m => m.length && alert("These media files were not found in the media/ folder and are not in the package:\n\n" + m.join("\n"));
+
+$("expmap").onclick = async () => {
+  if (!cur) return;
+  const s = slug(), html = buildEmbed(), mf = mediaFiles();
+  if (!mf.length) { download(s + "_map.html", html, "text/html"); return; }
+  try {
+    if (!window.JSZip) await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js");
+    const z = new JSZip();
+    z.file(s + "_map.html", html);
+    const missing = await addMedia(z, mf);
+    download(s + "_map_package.zip", await z.generateAsync({ type: "blob" }), "application/zip");
+    warnMissing(missing);
+  } catch (e) {
+    download(s + "_map.html", html, "text/html");
+    alert("Could not build the ZIP, so only the HTML was downloaded. Copy your files into a media/ folder next to it.");
+  }
+};
+
+/* ---- bulk media import: copies files into media/ so imported GeoJSON/GPX references resolve ---- */
+$("impmedia").onchange = async e => {
+  const files = [...e.target.files];
+  e.target.value = "";
+  if (!files.length) return;
+  let ok = 0; const bad = [], renamed = [];
+  for (const [i, f] of files.entries()) {
+    $("impmsg").textContent = "Uploading media " + (i + 1) + "/" + files.length + ": " + f.name;
+    try { const n = await uploadMedia(f); ok++; if (n !== f.name) renamed.push(f.name + " -> " + n); } catch (err) { bad.push(f.name); }
+  }
+  $("impmsg").textContent = ok + " media file(s) saved in media/." + (renamed.length ? " Renamed: " + renamed.join(", ") + "." : "") + (bad.length ? " Failed (is start.py running?): " + bad.join(", ") + "." : "");
+};
 
 /* ---- web component packaging ---- */
 function parkMapComponent() {
@@ -545,12 +684,12 @@ $("expzip").onclick=async()=>{if(!cur)return;
  const s=slug();
  const example='<!DOCTYPE html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">\n<title>'+esc(cur)+'</title></head>\n<body>\n<h1>'+esc(cur)+'</h1>\n\n<!-- 1. load the component once per page -->\n<script src="tunisia-park-map.js"><\/script>\n\n<!-- 2. place the map wherever you want it -->\n<tunisia-park-map src="'+s+'.json" height="600px"></tunisia-park-map>\n\n<!-- optional attributes: pitch="60"  terrain="false"  panel="false" -->\n</body></html>\n';
  const mf=mediaFiles();
- const readme="MEDIA FOLDER\n============\nCopy your media files into this folder, keeping the exact file names below.\nThe map looks for them at media/<file name>, next to the page that contains the map.\n\n"+(mf.length?mf.join("\n"):"(no local media files referenced; only web links are used)")+"\n\nNote: two files with the same name from different folders become one entry, so give them different names.\n";
+ const readme="MEDIA FOLDER\n============\nThe media files used by the map are included in this folder. Keep the exact file names below when you upload the site.\nThe map looks for them at media/<file name>, next to the page that contains the map.\n\n"+(mf.length?mf.join("\n"):"(no local media files referenced; only web links are used)")+"\n\nNote: two files with the same name from different folders become one entry, so give them different names.\n";
  const files={"media/README.txt":readme,"tunisia-park-map.js":"("+parkMapComponent.toString()+")();\n",[s+".json"]:JSON.stringify(data),"example.html":example};
  try{
   if(!window.JSZip)await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js");
-  const z=new JSZip();Object.entries(files).forEach(([n,t])=>z.file(n,t));
-  download(s+"_website_package.zip",await z.generateAsync({type:"blob"}),"application/zip")}
+  const z=new JSZip();Object.entries(files).forEach(([n,t])=>z.file(n,t));const missing=await addMedia(z,mf);
+  download(s+"_website_package.zip",await z.generateAsync({type:"blob"}),"application/zip");warnMissing(missing)}
  catch(e){Object.entries(files).forEach(([n,t],i)=>setTimeout(()=>download(n.replace("/","_"),t,"text/plain"),i*400));alert("ZIP library could not be loaded, so the files were downloaded separately. Create a media/ folder next to them yourself.")}};
 
 map.on("load",init);
