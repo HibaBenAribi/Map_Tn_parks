@@ -49,12 +49,12 @@
  <select id="f_type"></select>
  <input id="f_date" type="date">
  <textarea id="f_desc" placeholder="Description / notes"></textarea>
- <textarea id="f_media" placeholder="Media paths or links, one per line&#10;media/images/oryx.jpg&#10;media/audio/dawn.wav&#10;https://youtu.be/xxxxxxxxxxx"></textarea>
- <label class="mu">Attach media files: they are uploaded into the <code>media/</code> folder and recorded as <code>media/filename</code>.
+ <b class="mu">Media</b>
+ <div id="f_medialist" class="mu"></div>
+ <label class="mu">Add photos, audio, video or PDF files. They are uploaded into the <code>media/</code> folder.
    <input type="file" id="f_files" multiple>
  </label>
  <div id="f_upmsg" class="mu"></div>
- <div class="mu">Images, audio, video, PDF and YouTube links are shown in the popup.</div>
  <div class="row"><button id="f_ok">Save</button><button id="f_del" hidden>Delete</button><button id="f_no">Cancel</button></div>
 </dialog>
 
