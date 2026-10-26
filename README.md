@@ -1,16 +1,15 @@
 # Map_Tn_parks
 
 
-
 #  ​About
 
 The website allows you to generate interactive maps for any national park, integrating all your field data—including GPS points, camera trap videos, standard photos, bioacoustic audio recordings, and reference documents—directly onto the map, which you can easily download or embed into any existing website.
 
+static site : https://maptnparks.vercel.app/ 
 # ​Usage
-​The project will soon be hosted online:
-Site link : https://maptnparks.vercel.app/ 
+​1. Clone the repository 
 
-But the current live version is not yet fully functional ( media  may not be displayed ), Clone the repository and run the application locally from the source code (Run:  python start.py).
+2. Run the application locally from the source code  (Run:  python start.py)
 
 
 
